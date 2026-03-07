@@ -209,9 +209,12 @@
         style="text-align:center; padding:2.5rem 1rem; margin-top:2rem; border-top:1px solid var(--border-color); color:var(--text-muted); font-size:0.8rem; line-height:1.6;">
         <p style="font-size:1rem; margin-bottom:0.5rem;">🍀 Good luck in the new semester!</p>
         <p style="max-width:600px; margin:0 auto;">This website has no affiliation with Boğaziçi University. Please
-            check <a href="https://registration.boun.edu.tr" target="_blank" style="color:var(--light-blue);">BOUN
+            check <a href="https://registration.boun.edu.tr" target="_blank" rel="noopener noreferrer"
+                style="color:var(--light-blue);">BOUN
                 registration</a> for the most up-to-date schedule and classroom details for your classes. The
             information presented on this page may sometimes lag behind the registration website.</p>
+        <p style="margin-top:0.9rem;">Made by <a href="https://github.com/emirhancakan" target="_blank"
+                rel="noopener noreferrer" style="color:var(--light-blue);">github.com/emirhancakan</a></p>
     </footer>
 
     <!-- Bootstrap JS -->
@@ -271,6 +274,15 @@
         function superNormalizeRoom(room) {
             if (!room) return "";
             return room.replace(/\s/g, '').toUpperCase().trim();
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function normalizeRoomName(room) {
@@ -553,7 +565,7 @@
             gc.classList.remove('d-none');
 
             const bName = getBuildingNameForRoom(room);
-            gh.innerHTML = `${room}` + (bName ? ` <span class="badge bg-info" style="font-size:0.7rem;">${bName}</span>` : '');
+            gh.innerHTML = `${escapeHtml(room)}` + (bName ? ` <span class="badge bg-info" style="font-size:0.7rem;">${escapeHtml(bName)}</span>` : '');
             gb.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border"></div></td></tr>';
 
             try {
@@ -578,7 +590,7 @@
                 h += `<td style="font-weight:600; color:var(--text-secondary);"><strong>${(slot + 8).toString().padStart(2, '0')}:00</strong></td>`;
                 days.forEach(d => {
                     const m = schedule.find(i => String(i.time_slot) === String(slot) && i.day === dm[d]);
-                    h += m ? `<td class="slot-occupied">${m.course_code}</td>` : '<td></td>';
+                    h += m ? `<td class="slot-occupied">${escapeHtml(m.course_code)}</td>` : '<td></td>';
                 });
                 h += '</tr>';
                 gb.innerHTML += h;
@@ -676,13 +688,13 @@
                             <div class="card mb-3">
                                 <div class="card-header" style="background:var(--navy-mid); color:var(--text-primary); padding:0.8rem 1.25rem;">
                                     <h5 class="mb-0" style="font-size:0.95rem; font-weight:600;">
-                                        <i class="bi bi-building"></i> ${b.code} — ${b.name}
+                                        <i class="bi bi-building"></i> ${escapeHtml(b.code)} — ${escapeHtml(b.name)}
                                         <span class="badge" style="background:var(--green-bg); color:var(--green-accent); border:1px solid var(--green-border);">${avail.length} available</span>
                                     </h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="available-rooms-grid">
-                                        ${avail.map(r => `<span class="available-room-badge">${r}</span>`).join('')}
+                                        ${avail.map(r => `<span class="available-room-badge">${escapeHtml(r)}</span>`).join('')}
                                     </div>
                                 </div>
                             </div>`;
@@ -743,10 +755,10 @@
                 h += `
                     <div class="card mb-3">
                         <div class="card-header" style="background:var(--navy-mid); color:var(--text-primary); padding:0.8rem 1.25rem;">
-                            <h5 class="mb-0" style="font-size:0.95rem;">${c.course_code} — ${c.course_name}</h5>
+                            <h5 class="mb-0" style="font-size:0.95rem;">${escapeHtml(c.course_code)} — ${escapeHtml(c.course_name)}</h5>
                         </div>
                         <div class="card-body">
-                            <p class="mb-2" style="color:var(--text-secondary);"><strong>Instructor:</strong> ${c.instructor || 'N/A'}</p>
+                            <p class="mb-2" style="color:var(--text-secondary);"><strong>Instructor:</strong> ${escapeHtml(c.instructor || 'N/A')}</p>
                             ${renderCourseSchedule(c.schedule_slots)}
                         </div>
                     </div>`;
@@ -779,7 +791,7 @@
 
             let rows = '';
             flat.forEach(f => {
-                rows += `<tr><td><strong>${f.dayName}</strong></td><td>${f.time}</td><td>${f.room}</td><td>${f.building}</td></tr>`;
+                rows += `<tr><td><strong>${escapeHtml(f.dayName)}</strong></td><td>${escapeHtml(f.time)}</td><td>${escapeHtml(f.room)}</td><td>${escapeHtml(f.building)}</td></tr>`;
             });
             return `
                 <div class="table-responsive">
