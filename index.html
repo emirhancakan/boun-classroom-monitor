@@ -190,15 +190,6 @@
                 </div>
             </div>
 
-            <!-- Find Button -->
-            <div class="row mb-4">
-                <div class="col-md-4 mx-auto">
-                    <button id="findAvailableBtn" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Find Available Classrooms
-                    </button>
-                </div>
-            </div>
-
             <!-- Results -->
             <div id="availableResults"></div>
         </div>
@@ -263,7 +254,6 @@
         let selectedRoom = null;
         let currentMode = 'schedule';
         let timeOffset = 0;
-        let hasSearchedAvailable = false;
         let cachedRooms = null;
         let cachedCourses = null;
 
@@ -319,6 +309,19 @@
                 }
             }
             return null;
+        }
+
+        function getRoomsKeyForBuilding(code) {
+            // BM rooms are keyed under BME in rooms.json.
+            return code === 'BM' ? 'BME' : code;
+        }
+
+        function isExcludedAvailableRoom(room) {
+            if (!room) return true;
+            const normalized = room.trim().toUpperCase();
+            if (EXCLUDED_ROOMS.has(room.trim())) return true;
+            // Exclude lab / permission-only rooms from available list.
+            return normalized.includes('LAB');
         }
 
         // =====================================================
@@ -456,7 +459,7 @@
             void activePanel.offsetWidth; // force reflow
             activePanel.classList.add('panel-animate');
 
-            if (mode === 'available') { timeOffset = 0; updateTimeDisplay(); }
+            if (mode === 'available') { timeOffset = 0; updateTimeDisplay(); findAvailableClassrooms(); }
         }
 
         // =====================================================
@@ -477,6 +480,7 @@
             setInterval(() => {
                 if (currentMode === 'available') {
                     updateTimeDisplay();
+                    findAvailableClassrooms();
                 }
             }, 30000);
         });
@@ -535,7 +539,7 @@
             selectedBuilding = code;
             rs.innerHTML = '<option value="">Loading...</option>';
             try {
-                const rooms = (await ensureRoomsLoaded())[code] || [];
+                const rooms = (await ensureRoomsLoaded())[getRoomsKeyForBuilding(code)] || [];
                 rs.innerHTML = '<option value="">Select a room...</option>';
                 if (rooms.length > 0) {
                     rooms.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rs.appendChild(o); });
@@ -642,11 +646,10 @@
             if (newHour < 0 || newHour > 23) return;
             timeOffset += delta;
             updateTimeDisplay();
-            if (hasSearchedAvailable) findAvailableClassrooms();
+            if (currentMode === 'available') findAvailableClassrooms();
         }
 
         async function findAvailableClassrooms() {
-            hasSearchedAvailable = true;
             const sem = document.getElementById('semesterSelect').value;
             if (!sem) { alert('Please select a semester'); return; }
 
@@ -669,15 +672,15 @@
                 const occ = buildOccupancyMap(sem, courses);
                 const bldg = document.getElementById('availBuildingSelect').value;
                 const key = `${info.dayCode}-${info.slot}`;
-                const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS;
+                const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS.filter(b => !b.hidden);
 
                 let total = 0;
                 let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available at ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
 
                 list.forEach(b => {
-                    const bRooms = rooms[b.code] || [];
+                    const bRooms = rooms[getRoomsKeyForBuilding(b.code)] || [];
                     const avail = bRooms.filter(r => {
-                        if (EXCLUDED_ROOMS.has(r)) return false;
+                        if (isExcludedAvailableRoom(r)) return false;
                         const sn = superNormalizeRoom(r);
                         const o = occ[sn];
                         return !o || !o.has(key);
@@ -811,12 +814,15 @@
             document.getElementById('modeAvailable').addEventListener('click', () => switchMode('available'));
             document.getElementById('prevHourBtn').addEventListener('click', () => changeTimeOffset(-1));
             document.getElementById('nextHourBtn').addEventListener('click', () => changeTimeOffset(1));
-            document.getElementById('findAvailableBtn').addEventListener('click', findAvailableClassrooms);
+            document.getElementById('availBuildingSelect').addEventListener('change', () => {
+                if (currentMode === 'available') findAvailableClassrooms();
+            });
             document.getElementById('buildingSelect').addEventListener('change', onBuildingChange);
             document.getElementById('roomSelect').addEventListener('change', onRoomChange);
             document.getElementById('semesterSelect').addEventListener('change', () => {
                 const rs = document.getElementById('roomSelect');
                 if (rs && rs.value) loadRoomSchedule(rs.value);
+                if (currentMode === 'available') findAvailableClassrooms();
             });
             document.getElementById('searchBtn').addEventListener('click', searchCourse);
             document.getElementById('courseSearch').addEventListener('keydown', e => { if (e.key === 'Enter') searchCourse(); });
