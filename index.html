@@ -47,11 +47,11 @@
             <div class="col-lg-8 mx-auto">
                 <div class="mode-toggle-container">
                     <div id="modeSlider" class="mode-toggle-slider"></div>
-                    <button id="modeSchedule" class="mode-toggle active">
-                        <i class="bi bi-calendar-week"></i> Room Schedule
-                    </button>
                     <button id="modeAvailable" class="mode-toggle">
                         <i class="bi bi-door-open"></i> Available Classrooms
+                    </button>
+                    <button id="modeSchedule" class="mode-toggle active">
+                        <i class="bi bi-calendar-week"></i> Room Schedule
                     </button>
                 </div>
             </div>
@@ -169,6 +169,15 @@
                 <div class="col-md-8 mx-auto">
                     <div class="card">
                         <div class="card-body">
+                            <div class="day-selector mb-3" role="group" aria-label="Available classroom day selector">
+                                <button type="button" class="day-chip" data-day="M">Mon</button>
+                                <button type="button" class="day-chip" data-day="T">Tue</button>
+                                <button type="button" class="day-chip" data-day="W">Wed</button>
+                                <button type="button" class="day-chip" data-day="Th">Thu</button>
+                                <button type="button" class="day-chip" data-day="F">Fri</button>
+                                <button type="button" class="day-chip" data-day="Sa">Sat</button>
+                                <button type="button" class="day-chip" data-day="Su">Sun</button>
+                            </div>
                             <label class="form-label d-block text-center mb-3">
                                 <i class="bi bi-clock"></i> Time Slot
                             </label>
@@ -184,6 +193,22 @@
                                     Next Hour <i class="bi bi-chevron-right"
                                         style="margin-right:0; margin-left:4px;"></i>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duration selector -->
+            <div class="row mb-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <label class="form-label d-block mb-2"><i class="bi bi-clock-history"></i> Duration</label>
+                            <div class="btn-group" role="group" aria-label="Duration">
+                                <button type="button" class="btn btn-outline-primary duration-btn active" data-duration="1">1h</button>
+                                <button type="button" class="btn btn-outline-primary duration-btn" data-duration="2">2h</button>
+                                <button type="button" class="btn btn-outline-primary duration-btn" data-duration="3">3h</button>
                             </div>
                         </div>
                     </div>
@@ -242,6 +267,16 @@
         const EXCLUDED_ROOMS = new Set(['M 3160', 'M 3160 CAD LAB']);
 
         const JS_DAY_TO_CODE = { 1: 'M', 2: 'T', 3: 'W', 4: 'Th', 5: 'F' };
+        const JS_DAY_TO_SELECTOR = { 0: 'Su', 1: 'M', 2: 'T', 3: 'W', 4: 'Th', 5: 'F', 6: 'Sa' };
+        const SELECTOR_DAY_META = {
+            'M': { code: 'M', name: 'Monday', isWeekend: false },
+            'T': { code: 'T', name: 'Tuesday', isWeekend: false },
+            'W': { code: 'W', name: 'Wednesday', isWeekend: false },
+            'Th': { code: 'Th', name: 'Thursday', isWeekend: false },
+            'F': { code: 'F', name: 'Friday', isWeekend: false },
+            'Sa': { code: null, name: 'Saturday', isWeekend: true },
+            'Su': { code: null, name: 'Sunday', isWeekend: true }
+        };
         const DAY_STANDARDIZATION = {
             'Monday': 'M', 'M': 'M', 'monday': 'M',
             'Tuesday': 'T', 'T': 'T', 'tuesday': 'T',
@@ -254,6 +289,8 @@
         let selectedRoom = null;
         let currentMode = 'schedule';
         let timeOffset = 0;
+        let availableDuration = 1; // 1, 2 or 3 hours
+        let selectedAvailableDay = JS_DAY_TO_SELECTOR[new Date().getDay()] || 'M';
         let cachedRooms = null;
         let cachedCourses = null;
 
@@ -273,6 +310,14 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        function isFileProtocol() {
+            return window.location.protocol === 'file:';
+        }
+
+        function getLocalServerMessage() {
+            return 'Open this site through http://127.0.0.1:8000/ or another local server. Direct file access blocks the data files.';
         }
 
         function normalizeRoomName(room) {
@@ -422,6 +467,9 @@
         // =====================================================
 
         async function loadJSON(url) {
+            if (isFileProtocol()) {
+                throw new Error(getLocalServerMessage());
+            }
             const r = await fetch(url);
             if (!r.ok) throw new Error(`Failed: ${url} (${r.status})`);
             return r.json();
@@ -445,7 +493,7 @@
             currentMode = mode;
             document.getElementById('modeSchedule').classList.toggle('active', mode === 'schedule');
             document.getElementById('modeAvailable').classList.toggle('active', mode === 'available');
-            document.getElementById('modeSlider').classList.toggle('right', mode === 'available');
+            document.getElementById('modeSlider').classList.toggle('right', mode === 'schedule');
 
             const schedulePanel = document.getElementById('modeSchedulePanel');
             const availablePanel = document.getElementById('modeAvailablePanel');
@@ -459,7 +507,7 @@
             void activePanel.offsetWidth; // force reflow
             activePanel.classList.add('panel-animate');
 
-            if (mode === 'available') { timeOffset = 0; updateTimeDisplay(); findAvailableClassrooms(); }
+            if (mode === 'available') { timeOffset = 0; renderAvailableTimeDisplay(); findAvailableClassrooms(); }
         }
 
         // =====================================================
@@ -474,12 +522,13 @@
                 console.error('Init error:', e);
             }
             attachEventListeners();
-            updateTimeDisplay();
+            document.querySelectorAll('.day-chip').forEach(chip => chip.classList.toggle('active', chip.dataset.day === selectedAvailableDay));
+            renderAvailableTimeDisplay();
 
             // Auto-update time every 30 seconds
             setInterval(() => {
                 if (currentMode === 'available') {
-                    updateTimeDisplay();
+                    renderAvailableTimeDisplay();
                     findAvailableClassrooms();
                 }
             }, 30000);
@@ -501,8 +550,9 @@
                 });
                 if (data.length > 0) sel.value = data[0];
             } catch (e) {
-                sel.innerHTML = '<option value="">Failed</option>';
+                sel.innerHTML = `<option value="">${isFileProtocol() ? 'Run via localhost' : 'Failed'}</option>`;
                 sel.disabled = true;
+                console.error('Semester load failed:', e);
                 throw e;
             }
         }
@@ -548,7 +598,8 @@
                     rs.innerHTML = '<option value="">No rooms found</option>';
                 }
             } catch (e) {
-                rs.innerHTML = '<option value="">Error loading</option>';
+                rs.innerHTML = `<option value="">${isFileProtocol() ? 'Run via localhost' : 'Error loading'}</option>`;
+                console.error('Room list load failed:', e);
             }
         }
 
@@ -609,15 +660,14 @@
             const now = new Date();
             const hour = now.getHours() + offset;
             const min = now.getMinutes();
-            const jsDay = now.getDay();
-            const dayCode = JS_DAY_TO_CODE[jsDay] || null;
+            const dayMeta = SELECTOR_DAY_META[selectedAvailableDay] || SELECTOR_DAY_META['M'];
+            const dayCode = dayMeta.code;
             const slot = hour - 8;
-            const dayNames = { 'M': 'Monday', 'T': 'Tuesday', 'W': 'Wednesday', 'Th': 'Thursday', 'F': 'Friday' };
             return {
                 hour, min, slot, dayCode,
-                dayName: dayCode ? dayNames[dayCode] : null,
+                dayName: dayMeta.name,
                 isValid: dayCode !== null && slot >= 1 && slot <= 13,
-                isWeekend: jsDay === 0 || jsDay === 6,
+                isWeekend: dayMeta.isWeekend,
                 displayTime: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
             };
         }
@@ -640,12 +690,34 @@
             }
         }
 
+        function renderAvailableTimeDisplay() {
+            const info = getCurrentSlotInfo(timeOffset);
+            const big = document.getElementById('timeDisplayBig');
+            const detail = document.getElementById('timeDisplayDetail');
+            if (!big || !detail) return;
+
+            if (info.isWeekend) {
+                big.textContent = info.dayName;
+                detail.textContent = '';
+                return;
+            }
+
+            if (!info.isValid) {
+                big.textContent = info.displayTime;
+                detail.textContent = 'Outside class hours (09:00-21:00)';
+                return;
+            }
+
+            big.textContent = info.displayTime;
+            detail.textContent = `${info.dayName} - Slot ${info.slot} (${(info.slot + 8).toString().padStart(2, '0')}:00-${(info.slot + 9).toString().padStart(2, '0')}:00)`;
+        }
+
         function changeTimeOffset(delta) {
             const now = new Date();
             const newHour = now.getHours() + timeOffset + delta;
             if (newHour < 0 || newHour > 23) return;
             timeOffset += delta;
-            updateTimeDisplay();
+            renderAvailableTimeDisplay();
             if (currentMode === 'available') findAvailableClassrooms();
         }
 
@@ -655,6 +727,12 @@
 
             const info = getCurrentSlotInfo(timeOffset);
             const rd = document.getElementById('availableResults');
+            const duration = availableDuration || 1;
+
+            if (info.isWeekend) {
+                rd.innerHTML = '<div class="alert alert-info weekend-alert">All classrooms are available, but some buildings and classrooms may be locked.</div>';
+                return;
+            }
 
             if (info.isWeekend) {
                 rd.innerHTML = '<div class="alert alert-info"><i class="bi bi-emoji-sunglasses"></i> It\'s the weekend — all classrooms are available!</div>';
@@ -665,17 +743,22 @@
                 return;
             }
 
+            // Ensure the requested duration fits within the schedule bounds
+            if (info.slot + duration - 1 > 13) {
+                rd.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> Not enough remaining class hours for ${duration}h starting at ${(info.slot + 8).toString().padStart(2, '0')}:00.</div>`;
+                return;
+            }
+
             rd.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
 
             try {
                 const [courses, rooms] = await Promise.all([ensureCoursesLoaded(), ensureRoomsLoaded()]);
                 const occ = buildOccupancyMap(sem, courses);
                 const bldg = document.getElementById('availBuildingSelect').value;
-                const key = `${info.dayCode}-${info.slot}`;
                 const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS.filter(b => !b.hidden);
 
                 let total = 0;
-                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available at ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
+                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available for ${duration}h starting at ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
 
                 list.forEach(b => {
                     const bRooms = rooms[getRoomsKeyForBuilding(b.code)] || [];
@@ -683,7 +766,12 @@
                         if (isExcludedAvailableRoom(r)) return false;
                         const sn = superNormalizeRoom(r);
                         const o = occ[sn];
-                        return !o || !o.has(key);
+
+                        // A room is available if none of the requested slots are occupied
+                        for (let s = info.slot; s < info.slot + duration; s++) {
+                            if (o && o.has(`${info.dayCode}-${s}`)) return false;
+                        }
+                        return true;
                     });
                     if (avail.length > 0) {
                         total += avail.length;
@@ -817,6 +905,29 @@
             document.getElementById('availBuildingSelect').addEventListener('change', () => {
                 if (currentMode === 'available') findAvailableClassrooms();
             });
+            document.querySelectorAll('.day-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const nextDay = btn.dataset.day;
+                    if (!nextDay || nextDay === selectedAvailableDay) return;
+                    selectedAvailableDay = nextDay;
+                    document.querySelectorAll('.day-chip').forEach(chip => chip.classList.toggle('active', chip.dataset.day === nextDay));
+                    renderAvailableTimeDisplay();
+                    if (currentMode === 'available') findAvailableClassrooms();
+                });
+            });
+
+            // Duration selector buttons (1h / 2h / 3h)
+            document.querySelectorAll('.duration-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const d = Number(btn.dataset.duration || '1');
+                    if (d && d !== availableDuration) {
+                        availableDuration = d;
+                        document.querySelectorAll('.duration-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.duration) === d));
+                        if (currentMode === 'available') findAvailableClassrooms();
+                    }
+                });
+            });
+
             document.getElementById('buildingSelect').addEventListener('change', onBuildingChange);
             document.getElementById('roomSelect').addEventListener('change', onRoomChange);
             document.getElementById('semesterSelect').addEventListener('change', () => {
