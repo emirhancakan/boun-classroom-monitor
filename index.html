@@ -47,10 +47,10 @@
             <div class="col-lg-8 mx-auto">
                 <div class="mode-toggle-container">
                     <div id="modeSlider" class="mode-toggle-slider"></div>
-                    <button id="modeSchedule" class="mode-toggle active" onclick="switchMode('schedule')">
+                    <button id="modeSchedule" class="mode-toggle" onclick="switchMode('schedule')">
                         <i class="bi bi-calendar-week"></i> Room Schedule
                     </button>
-                    <button id="modeAvailable" class="mode-toggle" onclick="switchMode('available')">
+                    <button id="modeAvailable" class="mode-toggle active" onclick="switchMode('available')">
                         <i class="bi bi-door-open"></i> Available Classrooms
                     </button>
                 </div>
@@ -60,7 +60,7 @@
         <!-- ============================================= -->
         <!-- MODE A: Room Schedule                         -->
         <!-- ============================================= -->
-        <div id="modeSchedulePanel">
+        <div id="modeSchedulePanel" class="d-none">
 
             <!-- Building + Room side-by-side -->
             <div class="row mb-4 g-3">
@@ -146,7 +146,7 @@
         <!-- ============================================= -->
         <!-- MODE B: Available Classrooms                  -->
         <!-- ============================================= -->
-        <div id="modeAvailablePanel" class="d-none">
+        <div id="modeAvailablePanel">
 
             <!-- Building Selection -->
             <div class="row mb-4">
@@ -460,6 +460,10 @@
             }
             attachEventListeners();
             updateTimeDisplay();
+
+            const defaultMode = 'available';
+            currentMode = defaultMode;
+            switchMode(defaultMode);
 
             // Auto-update time every 30 seconds
             setInterval(() => {
