@@ -321,6 +321,53 @@ select:disabled,
 /* ============================================= */
 /* Time Navigation                               */
 /* ============================================= */
+.day-selector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.2rem 0 0.35rem;
+}
+
+.day-chip {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--border-color);
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(21, 34, 56, 0.92));
+    color: var(--text-secondary);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: background var(--transition-speed) ease, color var(--transition-speed) ease, border-color var(--transition-speed) ease, transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.day-chip:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(10, 22, 40, 0.28);
+}
+
+.day-chip:focus-visible {
+    outline: none;
+    border-color: var(--light-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.day-chip.active {
+    background: linear-gradient(135deg, var(--accent-blue), #60a5fa);
+    border-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.22);
+}
+
 .time-nav {
     display: flex;
     align-items: center;
@@ -365,6 +412,10 @@ select:disabled,
     font-size: 0.8rem;
     color: var(--text-secondary);
     margin-top: 0.2rem;
+}
+
+.time-display .time-detail:empty {
+    display: none;
 }
 
 /* ============================================= */
@@ -413,6 +464,17 @@ select:disabled,
     border-color: rgba(59, 130, 246, 0.3);
     color: var(--light-blue);
     background: rgba(59, 130, 246, 0.08);
+}
+
+.weekend-note {
+    margin-top: 0.45rem;
+    color: var(--text-secondary);
+}
+
+.weekend-alert {
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1.6;
 }
 
 .alert-success {
@@ -485,6 +547,10 @@ select:disabled,
     .time-nav {
         flex-direction: column;
         gap: 0.75rem;
+    }
+
+    .day-selector {
+        gap: 0.35rem;
     }
 }
 
