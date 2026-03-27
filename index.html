@@ -185,10 +185,10 @@
                                         style="margin-right:0; margin-left:4px;"></i>
                                 </button>
                             </div>
-                            <div class="quick-offset-group" aria-label="Quick hour search">
-                                <button class="quick-offset-btn" type="button" data-offset="1" onclick="setTimeOffset(1)">+1h</button>
-                                <button class="quick-offset-btn" type="button" data-offset="2" onclick="setTimeOffset(2)">+2h</button>
-                                <button class="quick-offset-btn" type="button" data-offset="3" onclick="setTimeOffset(3)">+3h</button>
+                            <div class="quick-offset-group" aria-label="Consecutive slot filter">
+                                <button class="quick-offset-btn active" type="button" data-stacked="1" onclick="setStackedSlotRequirement(1)">1 Slot</button>
+                                <button class="quick-offset-btn" type="button" data-stacked="2" onclick="setStackedSlotRequirement(2)">2 Slots</button>
+                                <button class="quick-offset-btn" type="button" data-stacked="3" onclick="setStackedSlotRequirement(3)">3 Slots</button>
                             </div>
                         </div>
                     </div>
@@ -256,6 +256,7 @@
         let selectedRoom = null;
         let currentMode = 'schedule';
         let timeOffset = 0;
+        let stackedSlotRequirement = 1;
         let hasSearchedAvailable = false;
         let cachedRooms = null;
         let cachedCourses = null;
@@ -627,22 +628,19 @@
                 detail.textContent = `${info.dayName} · Slot ${info.slot} (${(info.slot + 8).toString().padStart(2, '0')}:00–${(info.slot + 9).toString().padStart(2, '0')}:00)`;
             }
 
-            updateQuickOffsetButtons();
+            updateStackedSlotButtons();
         }
 
-        function updateQuickOffsetButtons() {
+        function updateStackedSlotButtons() {
             document.querySelectorAll('.quick-offset-btn').forEach(btn => {
-                const offset = parseInt(btn.dataset.offset || '0', 10);
-                btn.classList.toggle('active', offset === timeOffset);
+                const slots = parseInt(btn.dataset.stacked || '1', 10);
+                btn.classList.toggle('active', slots === stackedSlotRequirement);
             });
         }
 
-        function setTimeOffset(offset) {
-            const now = new Date();
-            const newHour = now.getHours() + offset;
-            if (newHour < 0 || newHour > 23) return;
-            timeOffset = offset;
-            updateTimeDisplay();
+        function setStackedSlotRequirement(slots) {
+            stackedSlotRequirement = slots;
+            updateStackedSlotButtons();
             if (currentMode === 'available') findAvailableClassrooms();
         }
 
@@ -672,17 +670,22 @@
                 return;
             }
 
+            if (info.slot + stackedSlotRequirement - 1 > 13) {
+                rd.innerHTML = `<div class="alert alert-warning"><i class="bi bi-clock-history"></i> ${stackedSlotRequirement}-slot search exceeds class hours from this start time. Choose an earlier time or fewer slots.</div>`;
+                return;
+            }
+
             rd.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
 
             try {
                 const [courses, rooms] = await Promise.all([ensureCoursesLoaded(), ensureRoomsLoaded()]);
                 const occ = buildOccupancyMap(sem, courses);
                 const bldg = document.getElementById('availBuildingSelect').value;
-                const key = `${info.dayCode}-${info.slot}`;
                 const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS;
 
                 let total = 0;
-                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available at ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
+                const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
+                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available for ${stackedSlotRequirement} consecutive ${slotLabel} starting ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
 
                 list.forEach(b => {
                     const bRooms = rooms[b.code] || [];
@@ -690,7 +693,11 @@
                         if (EXCLUDED_ROOMS.has(r)) return false;
                         const sn = superNormalizeRoom(r);
                         const o = occ[sn];
-                        return !o || !o.has(key);
+                        for (let i = 0; i < stackedSlotRequirement; i++) {
+                            const key = `${info.dayCode}-${info.slot + i}`;
+                            if (o && o.has(key)) return false;
+                        }
+                        return true;
                     });
                     if (avail.length > 0) {
                         total += avail.length;
