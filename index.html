@@ -625,7 +625,11 @@
                 detail.textContent = 'Outside class hours (09:00–21:00)';
             } else {
                 big.textContent = info.displayTime;
-                detail.textContent = `${info.dayName} · Slot ${info.slot} (${(info.slot + 8).toString().padStart(2, '0')}:00–${(info.slot + 9).toString().padStart(2, '0')}:00)`;
+                const rangeStartHour = info.slot + 8;
+                const rangeEndHour = rangeStartHour + stackedSlotRequirement;
+                const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
+                const exceedsHours = info.slot + stackedSlotRequirement - 1 > 13;
+                detail.textContent = `${info.dayName} · ${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00 (${stackedSlotRequirement} ${slotLabel})${exceedsHours ? ' · exceeds class hours' : ''}`;
             }
 
             updateStackedSlotButtons();
@@ -685,7 +689,9 @@
 
                 let total = 0;
                 const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
-                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available for ${stackedSlotRequirement} consecutive ${slotLabel} starting ${(info.slot + 8).toString().padStart(2, '0')}:00 — ${info.dayName}</h3>`;
+                const rangeStartHour = info.slot + 8;
+                const rangeEndHour = rangeStartHour + stackedSlotRequirement;
+                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available for ${stackedSlotRequirement} consecutive ${slotLabel} (${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00) — ${info.dayName}</h3>`;
 
                 list.forEach(b => {
                     const bRooms = rooms[b.code] || [];
