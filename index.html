@@ -185,6 +185,11 @@
                                         style="margin-right:0; margin-left:4px;"></i>
                                 </button>
                             </div>
+                            <div class="quick-offset-group" aria-label="Quick hour search">
+                                <button class="quick-offset-btn" type="button" data-offset="1" onclick="setTimeOffset(1)">+1h</button>
+                                <button class="quick-offset-btn" type="button" data-offset="2" onclick="setTimeOffset(2)">+2h</button>
+                                <button class="quick-offset-btn" type="button" data-offset="3" onclick="setTimeOffset(3)">+3h</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -621,6 +626,24 @@
                 big.textContent = info.displayTime;
                 detail.textContent = `${info.dayName} · Slot ${info.slot} (${(info.slot + 8).toString().padStart(2, '0')}:00–${(info.slot + 9).toString().padStart(2, '0')}:00)`;
             }
+
+            updateQuickOffsetButtons();
+        }
+
+        function updateQuickOffsetButtons() {
+            document.querySelectorAll('.quick-offset-btn').forEach(btn => {
+                const offset = parseInt(btn.dataset.offset || '0', 10);
+                btn.classList.toggle('active', offset === timeOffset);
+            });
+        }
+
+        function setTimeOffset(offset) {
+            const now = new Date();
+            const newHour = now.getHours() + offset;
+            if (newHour < 0 || newHour > 23) return;
+            timeOffset = offset;
+            updateTimeDisplay();
+            if (currentMode === 'available') findAvailableClassrooms();
         }
 
         function changeTimeOffset(delta) {

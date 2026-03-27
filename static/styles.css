@@ -418,6 +418,40 @@ select:disabled,
     display: none;
 }
 
+.quick-offset-group {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.quick-offset-btn {
+    appearance: none;
+    border: 1px solid var(--border-color);
+    background: var(--surface-light);
+    color: var(--text-secondary);
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: all var(--transition-speed) ease;
+}
+
+.quick-offset-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+    background: rgba(59, 130, 246, 0.08);
+}
+
+.quick-offset-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
 /* ============================================= */
 /* Available Room Results                        */
 /* ============================================= */
@@ -547,6 +581,14 @@ select:disabled,
     .time-nav {
         flex-direction: column;
         gap: 0.75rem;
+    }
+
+    .quick-offset-group {
+        gap: 0.45rem;
+    }
+
+    .quick-offset-btn {
+        min-width: 56px;
     }
 
     .day-selector {
