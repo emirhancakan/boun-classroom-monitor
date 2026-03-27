@@ -36,7 +36,7 @@
     <!-- Hero -->
     <div class="hero-section">
         <h1>BOUN Classroom Monitor</h1>
-        <span class="version-tag">v0.5 pre-release</span>
+        <span class="version-tag">v0.6.X</span>
     </div>
 
     <!-- Main Content -->
@@ -166,11 +166,12 @@
 
             <!-- Time Navigation: ← Previous Hour  |  TIME  |  Next Hour → -->
             <div class="row mb-4">
-                <div class="col-md-8 mx-auto">
+                <div class="col-md-11 col-lg-10 mx-auto">
                     <div class="card">
                         <div class="card-body">
-                            <label class="form-label d-block text-center mb-3">
-                                <i class="bi bi-clock"></i> Time Slot
+                            <label class="form-label d-block text-center mb-3 time-slot-label">
+                                <span><i class="bi bi-clock"></i> Time Slot</span>
+                                <span id="timeCurrentLabel" class="time-current-inline">--:--</span>
                             </label>
                             <div class="time-nav">
                                 <button class="time-nav-btn" onclick="changeTimeOffset(-1)">
@@ -242,6 +243,7 @@
 
         // Rooms to exclude from "Available Classrooms" (labs, special rooms)
         const EXCLUDED_ROOMS = new Set(['M 3160', 'M 3160 CAD LAB']);
+        const LAB_ROOM_PATTERN = /\bLAB(?:ORATORY)?\b/i;
 
         const JS_DAY_TO_CODE = { 1: 'M', 2: 'T', 3: 'W', 4: 'Th', 5: 'F' };
         const DAY_STANDARDIZATION = {
@@ -280,6 +282,13 @@
         function isValidRoom(room) {
             if (!room) return false;
             return /^[A-Za-zİıĞğÜüŞşÖöÇç]+\s*\d+/.test(room.trim());
+        }
+
+        function isExcludedFromAvailable(room) {
+            if (!room) return true;
+            const trimmedRoom = room.trim();
+            if (LAB_ROOM_PATTERN.test(trimmedRoom)) return true;
+            return EXCLUDED_ROOMS.has(trimmedRoom);
         }
 
         function getBuildingNameForRoom(room) {
@@ -615,21 +624,24 @@
             const info = getCurrentSlotInfo(timeOffset);
             const big = document.getElementById('timeDisplayBig');
             const detail = document.getElementById('timeDisplayDetail');
-            if (!big || !detail) return;
+            const currentLabel = document.getElementById('timeCurrentLabel');
+            if (!big || !detail || !currentLabel) return;
+
+            currentLabel.textContent = info.displayTime;
 
             if (info.isWeekend) {
-                big.textContent = '🎉 Weekend';
+                big.textContent = 'Weekend';
                 detail.textContent = 'All classrooms are available';
             } else if (!info.isValid) {
-                big.textContent = info.displayTime;
-                detail.textContent = 'Outside class hours (09:00–21:00)';
+                big.textContent = 'Outside class hours';
+                detail.textContent = '09:00–21:00';
             } else {
-                big.textContent = info.displayTime;
                 const rangeStartHour = info.slot + 8;
                 const rangeEndHour = rangeStartHour + stackedSlotRequirement;
                 const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
                 const exceedsHours = info.slot + stackedSlotRequirement - 1 > 13;
-                detail.textContent = `${info.dayName} · ${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00 (${stackedSlotRequirement} ${slotLabel})${exceedsHours ? ' · exceeds class hours' : ''}`;
+                big.textContent = `${info.dayName} · ${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00 (${stackedSlotRequirement} ${slotLabel})`;
+                detail.textContent = exceedsHours ? 'Selected range exceeds class hours' : '';
             }
 
             updateStackedSlotButtons();
@@ -688,15 +700,12 @@
                 const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS;
 
                 let total = 0;
-                const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
-                const rangeStartHour = info.slot + 8;
-                const rangeEndHour = rangeStartHour + stackedSlotRequirement;
-                let html = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-door-open"></i> Available for ${stackedSlotRequirement} consecutive ${slotLabel} (${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00) — ${info.dayName}</h3>`;
+                let html = '';
 
                 list.forEach(b => {
                     const bRooms = rooms[b.code] || [];
                     const avail = bRooms.filter(r => {
-                        if (EXCLUDED_ROOMS.has(r)) return false;
+                        if (isExcludedFromAvailable(r)) return false;
                         const sn = superNormalizeRoom(r);
                         const o = occ[sn];
                         for (let i = 0; i < stackedSlotRequirement; i++) {
@@ -727,7 +736,7 @@
                 if (total === 0) {
                     html += '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> No available classrooms found.</div>';
                 } else {
-                    html = `<div class="alert alert-success mb-3"><i class="bi bi-check-circle"></i> <strong>${total}</strong> classrooms available</div>` + html;
+                    html = `<div class="alert alert-success available-summary-alert mb-3"><i class="bi bi-check-circle"></i> <strong>${total}</strong> classrooms available</div>` + html;
                 }
 
                 rd.innerHTML = html;
