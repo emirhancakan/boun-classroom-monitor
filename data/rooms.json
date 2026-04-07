@@ -1,5 +1,108 @@
 {
-  "Hamlin Hall": [
+  "BM": [
+    "BM A2",
+    "BM A3",
+    "BM A4",
+    "BM A5",
+    "BM A6",
+    "BM AVS",
+    "BM B3",
+    "BM B4",
+    "BM B5",
+    "BM HW LAB",
+    "BM HWLAB",
+    "BME 07",
+    "BME 18",
+    "BME 19"
+  ],
+  "EF": [
+    "EF 02",
+    "EF 03",
+    "EF 04",
+    "EF 05",
+    "EF 06",
+    "EF 07",
+    "EF 101",
+    "EF 102",
+    "EF 103",
+    "EF 104",
+    "EF 106",
+    "EF 111",
+    "EF 116",
+    "EF 201",
+    "EF 202",
+    "EF 203",
+    "EF 204",
+    "EF 205",
+    "EF 206",
+    "EF 216",
+    "EF 302",
+    "EF 304",
+    "EF 306",
+    "EF 316",
+    "EF 402 (LAB)",
+    "EF 404",
+    "EF 404 (LAB)",
+    "EF 406",
+    "EF 406 (LAB)",
+    "EF 416",
+    "EF 416 (LAB)"
+  ],
+  "ET": [
+    "ET 01",
+    "ET 02",
+    "ET 03",
+    "ET B407",
+    "ET B413",
+    "ET B415",
+    "ET B507",
+    "ET B509",
+    "ET B511",
+    "ET B513",
+    "ETB 415"
+  ],
+  "GKM": [
+    "GKM PARKE SALON"
+  ],
+  "HA": [
+    "HA 202",
+    "HA 301",
+    "HA 302",
+    "HA 303"
+  ],
+  "HB": [
+    "HB 102",
+    "HB 104",
+    "HB 105",
+    "HB 107",
+    "HB 108",
+    "HB 109"
+  ],
+  "HC": [
+    "HC 01",
+    "HC 02",
+    "HC 104",
+    "HC 105",
+    "HC 106",
+    "HC 107",
+    "HC 108",
+    "HC 201",
+    "HC 203",
+    "HC 214",
+    "HC 218",
+    "HC 220",
+    "HC 301",
+    "HC 325"
+  ],
+  "HD": [
+    "HD 101",
+    "HD 101 (SALON3)",
+    "HD 201",
+    "HD 201 (SALON2)",
+    "HD 301",
+    "HD 301 (SALON1)"
+  ],
+  "HH": [
     "HH 103",
     "HH 108 LAB",
     "HH 120",
@@ -14,23 +117,52 @@
     "HH Z12",
     "HH Z17"
   ],
-  "Kuzey Bina": [
+  "JF": [
+    "JF 101",
+    "JF 102",
+    "JF 108",
+    "JF 331",
+    "JF 332",
+    "JF 333",
+    "JF 334",
+    "JF 401",
+    "JF 412",
+    "JF 507"
+  ],
+  "KB": [
     "KB 125",
     "KB 126",
     "KB 316",
     "KB 401",
     "KB 428",
     "KB 432",
-    "KB DAĞÖZAY-234",
+    "KB DA\u011e\u00d6ZAY-234",
     "KB FARADAY",
     "KB FOURIER-233",
     "KB KIRCHHOFF",
     "KB MAXWELL-251",
     "KB SHANNON-232",
     "KB TESLA-123",
-    "KB Z01"
+    "KB Z01",
+    "MULTI PURPOSE",
+    "MULTI PURPOSE,MULTI"
   ],
-  "Mühendislik Binası": [
+  "KP": [
+    "KP 01",
+    "KP 02",
+    "KP 03",
+    "KP 04",
+    "KP 05",
+    "KP 06",
+    "KP 07",
+    "KP 08",
+    "KP 09",
+    "KP 214",
+    "KP 215",
+    "KP 314",
+    "KP 315"
+  ],
+  "M": [
     "M 1100",
     "M 1169",
     "M 1170",
@@ -49,8 +181,6 @@
     "M 3120",
     "M 3160",
     "M 3160 CAD LAB",
-    "MULTI PURPOSE",
-    "MULTI PURPOSE,MULTI",
     "VYKM1",
     "VYKM2",
     "VYKM3",
@@ -59,7 +189,26 @@
     "VYKM6",
     "VYKM7"
   ],
-  "New Hall": [
+  "NB": [
+    "NB 118",
+    "NB 119",
+    "NB 5 M\u00dcZ\u0130K",
+    "NB 6 HAT",
+    "NB B10",
+    "NB HAT AT\u00d6LYES\u0130",
+    "NB HAT ODASI",
+    "NB M\u00dcZ\u0130K ODASI",
+    "NB Z10",
+    "NB Z10 RES\u0130M",
+    "NB Z11",
+    "NB Z11 RES\u0130M",
+    "NB Z12",
+    "NB Z12 M\u00dcZ\u0130K",
+    "NB Z13",
+    "NB Z13 PA",
+    "NB Z17 (LAB)"
+  ],
+  "NH": [
     "NH 001",
     "NH 002",
     "NH 101",
@@ -81,5 +230,35 @@
     "NH 404",
     "NH 405",
     "NH 405,NH 405"
+  ],
+  "TB": [
+    "TB 121",
+    "TB 130",
+    "TB 155",
+    "TB 225",
+    "TB 230",
+    "TB 240",
+    "TB 260A",
+    "TB 310",
+    "TB 415",
+    "TB 480",
+    "TB 490",
+    "TB 502"
+  ],
+  "VB": [
+    "VB 100",
+    "VB 200",
+    "VB 201"
+  ],
+  "\u0130B": [
+    "\u0130B 100",
+    "\u0130B 102",
+    "\u0130B 103",
+    "\u0130B 201",
+    "\u0130B 204",
+    "\u0130B 207",
+    "\u0130B 211",
+    "\u0130B 301",
+    "\u0130B 312"
   ]
 }
