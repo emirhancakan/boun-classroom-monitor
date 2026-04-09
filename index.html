@@ -802,6 +802,7 @@
             if (!slots || slots.length === 0) return '<p style="color:var(--text-muted);">No schedule info</p>';
             const dayNames = { 'M': 'Mon', 'T': 'Tue', 'W': 'Wed', 'Th': 'Thu', 'F': 'Fri' };
             const order = { 'M': 1, 'T': 2, 'W': 3, 'Th': 4, 'F': 5 };
+            const slotTypeLabels = { 'LECTURE': 'Lecture', 'LAB': 'Lab', 'PS': 'P.S.' };
 
             // Flatten each slot entry into individual day-slot-room rows
             const flat = [];
@@ -809,13 +810,14 @@
                 const days = parseDayString((s.d || '').trim());
                 const timeSlots = parseTimeSlots(String(s.t || ''), days.length);
                 const rooms = (s.r || '').split('|').map(r => r.trim()).filter(r => r);
+                const sessionType = slotTypeLabels[s.y] || s.y || 'Lecture';
                 const n = Math.min(days.length, timeSlots.length);
                 for (let i = 0; i < n; i++) {
                     const dayCode = DAY_STANDARDIZATION[days[i]];
                     if (!dayCode) continue;
                     const room = rooms[i] || rooms[0] || 'TBA';
                     const building = getBuildingNameForRoom(room) || '—';
-                    flat.push({ day: dayCode, dayName: dayNames[dayCode] || dayCode, slot: timeSlots[i], time: `${(timeSlots[i] + 8).toString().padStart(2, '0')}:00`, room, building });
+                    flat.push({ day: dayCode, dayName: dayNames[dayCode] || dayCode, slot: timeSlots[i], time: `${(timeSlots[i] + 8).toString().padStart(2, '0')}:00`, room, building, sessionType });
                 }
             });
 
@@ -823,12 +825,12 @@
 
             let rows = '';
             flat.forEach(f => {
-                rows += `<tr><td><strong>${f.dayName}</strong></td><td>${f.time}</td><td>${f.room}</td><td>${f.building}</td></tr>`;
+                rows += `<tr><td><strong>${f.dayName}</strong></td><td>${f.time}</td><td>${f.sessionType}</td><td>${f.room}</td><td>${f.building}</td></tr>`;
             });
             return `
                 <div class="table-responsive">
                     <table class="table table-sm table-striped mb-0">
-                        <thead><tr><th>Day</th><th>Time</th><th>Room</th><th>Building</th></tr></thead>
+                        <thead><tr><th>Day</th><th>Time</th><th>Session</th><th>Room</th><th>Building</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 </div>`;
