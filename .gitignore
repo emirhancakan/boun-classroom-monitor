@@ -1,30 +1,14 @@
-
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
+*.py[cod]
 .venv/
-pip-log.txt
-pip-delete-this-directory.txt
+venv/
 
-# Databases
-*.sqlite3
-# buis_schedule.db # Uncomment to ignore the main DB if you plan to generate it on server
-buis_schedule_backup.db
-
-# Logs
-server.log
-server_new.log
-server_v2.log
-*.log
+# Editor / tooling
+.claude/
+.vscode/
+.idea/
 
 # OS
-.DS_Store
 Thumbs.db
-
-# Local scripts
-run-local.bat
+.DS_Store
