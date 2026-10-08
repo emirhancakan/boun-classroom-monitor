@@ -1,0 +1,724 @@
+:root {
+  --bg: #f5f6f8;
+  --panel-bg: #ffffff;
+  --text: #1a1d23;
+  --text-dim: #6b7280;
+  --border: #e2e4e9;
+  --accent: #3b5bdb;
+  --accent-bg: #edf0ff;
+  --free: #2b8a3e;
+  --free-bg: #ebfbee;
+  --busy: #c92a2a;
+  --busy-bg: #fff5f5;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d;
+    --panel-bg: #1f222a;
+    --text: #e8e9ec;
+    --text-dim: #9aa0ab;
+    --border: #2e323c;
+    --accent: #6c8cff;
+    --accent-bg: #23294a;
+    --free: #69db7c;
+    --free-bg: #1d3324;
+    --busy: #ff8787;
+    --busy-bg: #3a1f22;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;      /* on narrow screens the totals wrap instead of overflowing */
+  gap: 8px 24px;
+  padding: 14px 20px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.semester-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.semester-picker select {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* Mode switch: two segments, the active one filled. */
+.mode-toggle, .segmented, .lang-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 2px;
+  gap: 2px;
+}
+
+.mode-btn, .segmented button, .lang-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mode-btn:hover, .segmented button:hover, .lang-btn:hover { color: var(--text); }
+
+.mode-btn.active, .segmented button.active, .lang-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+.mode-btn { font-weight: 600; }
+.lang-btn { padding: 4px 8px; font-size: 12px; font-weight: 600; }
+
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.clock { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.notice {
+  margin: 12px 16px 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.app-main {
+  display: grid;
+  /* The timetable has room to spare, so the course list gets the extra width -
+     long course names and instructor lines wrap far less. */
+  grid-template-columns: 420px 1fr;
+  gap: 16px;
+  padding: 16px;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: calc(var(--header-h, 60px) + 16px);
+  height: calc(100vh - var(--header-h, 60px) - 32px);
+}
+
+/* Room finder stays its natural height; the course list below it takes the
+   rest of the column and scrolls. */
+.room-panel { flex: 0 0 auto; }
+
+/* The panel itself no longer scrolls. The field sits in a fixed row and only
+   the result list below it scrolls, so the list slides past the search box
+   rather than underneath it. */
+.search-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.search-bar {
+  flex: 0 0 auto;
+  padding-bottom: 10px;
+}
+
+.text-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.results-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.results { display: flex; flex-direction: column; gap: 8px; }
+
+.result-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+
+.result-card .rc-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rc-code { font-weight: 600; font-size: 13px; }
+.rc-name { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+.rc-meta { font-size: 11px; color: var(--text-dim); margin-top: 6px; line-height: 1.5; }
+
+.empty-note { color: var(--text-dim); font-size: 13px; padding: 8px 2px; }
+
+/* schedule grid */
+/* No overflow here on purpose: any scroll container between the sticky day
+   headers and the viewport would make them stick to this box (which has no
+   height limit) instead of to the page. The table is table-layout:fixed at
+   width:100%, so it never overflows horizontally anyway. */
+.grid-wrap { }
+
+table.grid {
+  border-collapse: separate;   /* collapsed borders don't travel with sticky cells */
+  border-spacing: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* With separate borders each cell draws only two sides, so lines stay single
+   width and travel correctly with the sticky header row. */
+table.grid th, table.grid td {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+  vertical-align: top;
+  height: 52px;
+}
+
+table.grid tr > *:first-child { border-left: 1px solid var(--border); }
+table.grid thead th { border-top: 1px solid var(--border); }
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 52px;
+}
+
+table.grid th {
+  background: var(--bg);
+  font-size: 12px;
+  padding: 6px 4px;
+  color: var(--text-dim);
+  height: auto;
+  /* Day names stay visible while scrolling the timetable. --header-h is the
+     live height of the page header, measured in app.js, so the row parks
+     directly beneath it instead of behind it. */
+  position: sticky;
+  top: var(--header-h, 52px);
+  z-index: 4;
+}
+
+/* Hours read as labels for the row, so they are bold and centred, and the
+   column is only as wide as "09:00" needs - it has no reason to match the
+   width of a course cell. */
+.time-col {
+  width: 52px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  padding: 4px 2px !important;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cell-block {
+  flex: 1 1 0;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.35;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  border-bottom: 1px solid var(--bg);
+  overflow: hidden;
+}
+
+.cell-block:last-child { border-bottom: none; }
+
+.cell-block .cb-code { font-weight: 600; }
+.cell-block .cb-sub { color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* LAB / P.S. sessions are flagged so a lab hour isn't mistaken for the lecture. */
+.cb-type {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  vertical-align: 1px;
+  background: var(--text-dim);
+  color: var(--panel-bg);
+}
+
+@media (max-width: 1000px) {
+  .app-main { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; }
+  .search-panel { overflow-y: visible; }
+  .results-scroll { max-height: 420px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll views: a draggable knob in a knob slot, drawn over the real scroller.
+
+   The native scroller still does the scrolling, so macOS elasticity at the
+   content boundaries is preserved - note there is deliberately no
+   overscroll-behavior declaration anywhere in this file.
+
+   [data-scroller-style] is set by scrollview.js: "overlay" when the platform
+   draws scrollbars over content (macOS default, 0px of reserved layout) and
+   "legacy" when it reserves a gutter.
+   --------------------------------------------------------------------------- */
+:root {
+  --sv-overlay-size: 11px;
+  --sv-legacy-size: 15px;
+  --sv-knob-thickness: 7px;
+  --sv-knob-thickness-hover: 9px;
+  --sv-knob: rgba(0, 0, 0, 0.40);
+  --sv-knob-strong: rgba(0, 0, 0, 0.62);
+  --sv-slot-bg: rgba(0, 0, 0, 0.06);
+  --sv-slot-line: rgba(0, 0, 0, 0.11);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sv-knob: rgba(255, 255, 255, 0.34);
+    --sv-knob-strong: rgba(255, 255, 255, 0.58);
+    --sv-slot-bg: rgba(255, 255, 255, 0.05);
+    --sv-slot-line: rgba(255, 255, 255, 0.09);
+  }
+}
+
+:root[data-scroller-style="overlay"] { --sv-size: var(--sv-overlay-size); }
+:root[data-scroller-style="legacy"]  { --sv-size: var(--sv-legacy-size); }
+
+/* Hide the platform scrollbar. Applied from JS, so the native one survives if
+   scrollview.js never runs. */
+.sv-viewport {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* old Edge */
+}
+.sv-viewport::-webkit-scrollbar { width: 0; height: 0; }
+
+.sv-rail {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 6;
+  pointer-events: none;       /* only the slot and knob are interactive */
+}
+
+.sv-rail-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;                    /* spans the window so the edge glow can too */
+  right: 0;
+  bottom: 0;
+  height: auto;
+  z-index: 50;                /* above the sticky page header */
+}
+
+.sv-rail-fixed .sv-edge-top { top: 0; }
+.sv-rail-fixed .sv-edge-bottom { top: auto; bottom: 0; transform: none; }
+
+.sv-rail.sv-not-scrollable { display: none; }
+
+/* Reserve room on the right of element scrollers so content - in particular a
+   card's Add/Remove button - stops before the knob instead of sitting under it.
+   scrollview.js then pushes the slot out into this gutter. Declared after
+   .panel so the longhand wins over its padding shorthand. */
+.sv-viewport-element {
+  padding-right: calc(var(--sv-size) + 5px);
+}
+
+.sv-slot {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--sv-size);
+  pointer-events: auto;
+}
+
+.sv-rail-fixed .sv-slot { top: 0; bottom: 0; height: auto; }
+
+.sv-knob {
+  position: absolute;
+  top: 0;
+  right: calc((var(--sv-size) - var(--sv-knob-thickness)) / 2);
+  width: var(--sv-knob-thickness);
+  min-height: 24px;
+  border-radius: 999px;
+  background: var(--sv-knob);
+  will-change: transform;
+  transition: opacity 160ms ease, background-color 120ms ease, width 120ms ease;
+}
+
+.sv-slot:hover .sv-knob,
+.sv-rail.sv-dragging .sv-knob {
+  background: var(--sv-knob-strong);
+  width: var(--sv-knob-thickness-hover);
+  right: calc((var(--sv-size) - var(--sv-knob-thickness-hover)) / 2);
+}
+
+/* Overlay: floats over content and fades out shortly after use, revealing
+   itself again on scroll or when the pointer approaches the slot. */
+:root[data-scroller-style="overlay"] .sv-knob { opacity: 0; }
+:root[data-scroller-style="overlay"] .sv-rail.sv-active .sv-knob,
+:root[data-scroller-style="overlay"] .sv-slot:hover .sv-knob { opacity: 1; }
+:root[data-scroller-style="overlay"] .sv-slot:hover { background: var(--sv-slot-bg); }
+
+/* Legacy: permanently visible, in a drawn slot, as classic scrollbars are.
+   The panels already carry 14px of padding and the grid 16px, so content stays
+   clear of the slot without reserving an extra gutter. */
+:root[data-scroller-style="legacy"] .sv-knob { opacity: 1; }
+:root[data-scroller-style="legacy"] .sv-slot {
+  background: var(--sv-slot-bg);
+  border-left: 1px solid var(--sv-slot-line);
+}
+
+/* Boundary feedback for platforms without native scroll elasticity (Windows,
+   most Linux). macOS rubber-bands for real, so scrollview.js doesn't create
+   these elements there at all. */
+.sv-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, height 180ms ease;
+}
+
+.sv-edge-top    { background: linear-gradient(to bottom, var(--text), transparent); }
+.sv-edge-bottom { background: linear-gradient(to top, var(--text), transparent);
+                  transform: translateY(-100%); }
+
+.sv-rail.sv-glow-top .sv-edge-top,
+.sv-rail.sv-glow-bottom .sv-edge-bottom {
+  opacity: 0.22;
+  height: 12px;
+}
+
+/* Dragging the knob shouldn't select the text it passes over. */
+.sv-drag-active,
+.sv-drag-active * {
+  user-select: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-edge { transition: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-knob { transition: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared bits
+   --------------------------------------------------------------------------- */
+[hidden] { display: none !important; }
+
+.panel h2 { font-size: 14px; margin: 0 0 10px; }
+
+.control { display: flex; flex-direction: column; gap: 6px; }
+
+.control label, .control-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.control select {
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.message {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.app-footer {
+  text-align: center;
+  padding: 28px 16px 36px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.app-footer p { max-width: 640px; margin: 0 auto 6px; }
+.app-footer a { color: var(--accent); }
+.footer-luck { font-size: 14px; color: var(--text); }
+.footer-meta { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------------------
+   Available Classrooms
+   --------------------------------------------------------------------------- */
+#availableView {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 28px;
+}
+
+.controls .control { min-width: 0; max-width: 100%; }
+.controls select { width: 100%; }
+.building-control { flex: 0 1 340px; }
+.time-control { flex: 1 1 340px; }
+
+.time-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-btn, .now-btn {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: var(--radius);
+  font: inherit;
+  cursor: pointer;
+}
+
+.nav-btn { width: 36px; height: 36px; font-size: 20px; line-height: 1; flex-shrink: 0; }
+.now-btn { height: 36px; padding: 0 12px; font-size: 13px; flex-shrink: 0; }
+.nav-btn:hover, .now-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.now-btn:disabled { color: var(--text-dim); cursor: default; opacity: 0.6; }
+
+.time-display { flex: 1; min-width: 0; text-align: center; }
+.time-big { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.time-detail { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+.now-badge {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  padding-bottom: 8px;
+}
+
+.summary-line { font-size: 14px; color: var(--text-dim); }
+.summary-line strong { color: var(--free); font-size: 16px; }
+
+.building-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.building-head h2 { margin: 0; margin-right: auto; font-size: 14px; }
+.b-code { color: var(--accent); margin-right: 4px; }
+
+.pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill-free { background: var(--free-bg); color: var(--free); }
+.pill-busy { background: var(--busy-bg); color: var(--busy); }
+
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.room-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--free);
+  background: var(--panel-bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.room-chip:hover { border-color: var(--accent); border-left-color: var(--accent); }
+.room-chip.busy { border-left-color: var(--busy); }
+.room-chip .chip-name { font-weight: 600; font-size: 13px; }
+.room-chip .chip-detail {
+  font-size: 11px;
+  color: var(--text-dim);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.room-chip.free .chip-detail { color: var(--free); }
+
+.busy-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 14px 0 8px;
+}
+
+/* ---------------------------------------------------------------------------
+   Room Schedule
+   --------------------------------------------------------------------------- */
+.room-panel .text-input { margin-bottom: 8px; }
+
+.room-matches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.room-matches:empty { display: none; }
+
+.room-link {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.room-link:hover { border-color: var(--accent); }
+.room-link.current { background: var(--accent); color: white; border-color: var(--accent); }
+
+.select-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.select-row select { width: 100%; }
+
+.result-card .rc-code { font-weight: 600; font-size: 13px; }
+.meeting-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  margin-top: 4px;
+}
+.ml-time { font-variant-numeric: tabular-nums; min-width: 92px; }
+.meeting-line .cb-type { margin-left: 0; }
+
+.schedule-head { margin-bottom: 12px; }
+.room-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.room-title h2 { margin: 0; font-size: 20px; }
+.room-building { font-size: 13px; color: var(--text-dim); }
+
+.room-status {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.status-free { background: var(--free-bg); color: var(--free); }
+.status-busy { background: var(--busy-bg); color: var(--busy); }
+.status-off { background: var(--bg); color: var(--text-dim); }
+
+/* The current hour in the room's week. */
+table.grid td.now-cell { box-shadow: inset 0 0 0 2px var(--accent); }
+
+@media (max-width: 700px) {
+  .app-header { padding: 12px 16px; gap: 8px 14px; }
+  .header-right { margin-left: 0; }
+  .mode-toggle { order: 5; width: 100%; }
+  .mode-btn { flex: 1; }
+  #availableView, .app-main { padding: 12px; }
+  .notice { margin: 10px 12px 0; }
+  .select-row { grid-template-columns: 1fr; }
+  .chip-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}

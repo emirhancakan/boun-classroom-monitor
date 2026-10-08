@@ -1,785 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOUN Classroom Monitor</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="static/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOUN Classroom Monitor</title>
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <label for="semesterSelect"><i class="bi bi-calendar3"></i> Semester</label>
-            <select id="semesterSelect">
-                <option value="">Loading...</option>
-            </select>
-        </div>
-        <div class="disclaimer-badge">
-            <i class="bi bi-info-circle"></i>
-            <span>Unannounced room reservations may not be reflected here.</span>
-        </div>
+
+<header class="app-header">
+  <h1 data-i18n="title">Classroom Monitor</h1>
+  <div class="semester-picker">
+    <label for="semesterSelect" data-i18n="semester">Semester</label>
+    <select id="semesterSelect"></select>
+  </div>
+  <div class="mode-toggle" role="tablist">
+    <button type="button" class="mode-btn" id="modeAvailable" role="tab" data-mode="available" data-i18n="modeAvailable">Available Classrooms</button>
+    <button type="button" class="mode-btn" id="modeSchedule" role="tab" data-mode="schedule" data-i18n="modeSchedule">Room Schedule</button>
+  </div>
+  <div class="header-right">
+    <span class="clock" id="clock"></span>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" class="lang-btn" data-lang="en">EN</button>
+      <button type="button" class="lang-btn" data-lang="tr">TR</button>
+    </div>
+  </div>
+</header>
+
+<p class="notice" data-i18n="disclaimerShort">Unannounced room reservations may not be reflected here.</p>
+
+<!-- Available Classrooms -->
+<main class="view" id="availableView" hidden>
+  <section class="panel controls">
+    <div class="control building-control">
+      <label for="availBuildingSelect" data-i18n="building">Building</label>
+      <select id="availBuildingSelect"></select>
     </div>
 
-    <div class="hero-section">
-        <h1>BOUN Classroom Monitor</h1>
+    <div class="control time-control">
+      <span class="control-label" data-i18n="timeSlot">Time slot</span>
+      <div class="time-nav">
+        <button type="button" class="nav-btn" id="prevHour" data-i18n-title="prevHour" title="Previous hour">‹</button>
+        <div class="time-display">
+          <div class="time-big" id="timeBig">--:--</div>
+          <div class="time-detail" id="timeDetail"></div>
+        </div>
+        <button type="button" class="nav-btn" id="nextHour" data-i18n-title="nextHour" title="Next hour">›</button>
+        <button type="button" class="now-btn" id="nowBtn" data-i18n="now">Now</button>
+      </div>
     </div>
 
-    <div class="container-fluid px-4 pb-5" style="max-width: 1200px;">
-
-        <div class="row mb-4 mt-4">
-            <div class="col-lg-8 mx-auto">
-                <div class="mode-toggle-container">
-                    <div id="modeSlider" class="mode-toggle-slider"></div>
-                    <button id="modeSchedule" class="mode-toggle" onclick="switchMode('schedule')">
-                        <i class="bi bi-calendar-week"></i> Room Schedule
-                    </button>
-                    <button id="modeAvailable" class="mode-toggle active" onclick="switchMode('available')">
-                        <i class="bi bi-door-open"></i> Available Classrooms
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="modeSchedulePanel" class="d-none">
-
-            <div class="row mb-4 g-3">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <label for="buildingSelect" class="form-label">
-                                <i class="bi bi-building"></i> Building
-                            </label>
-                            <select id="buildingSelect" class="form-select">
-                                <option value="">Select a building...</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <label for="roomSelect" class="form-label">
-                                <i class="bi bi-door-closed"></i> Room
-                            </label>
-                            <select id="roomSelect" class="form-select" disabled>
-                                <option value="">Select a building first</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="scheduleGridContainer" class="mb-4 d-none">
-                <div class="card">
-                    <div class="card-header"
-                        style="background: var(--navy-mid); color: var(--text-primary); padding: 1rem 1.25rem;">
-                        <h3 class="h6 mb-0" id="gridHeader" style="font-weight: 600;">Weekly Schedule</h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="schedule-grid">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 80px;">Time</th>
-                                        <th>Mon</th>
-                                        <th>Tue</th>
-                                        <th>Wed</th>
-                                        <th>Thu</th>
-                                        <th>Fri</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="scheduleGridBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <hr class="my-4" style="border-color: var(--border-color);">
-
-            <div class="mb-4">
-                <h2 class="h5 mb-3" style="color: var(--text-secondary);"><i class="bi bi-search"></i> Course Search
-                </h2>
-                <div class="card">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-8">
-                                <input type="text" id="courseSearch" class="form-control"
-                                    placeholder="Enter course code (e.g., CE, CMPE 150)...">
-                            </div>
-                            <div class="col-md-4">
-                                <button id="searchBtn" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i> Search
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="courseResults"></div>
-        </div>
-
-        <div id="modeAvailablePanel">
-
-            <div class="row mb-4">
-                <div class="col-md-6 mx-auto">
-                    <div class="card">
-                        <div class="card-body">
-                            <label for="availBuildingSelect" class="form-label">
-                                <i class="bi bi-building"></i> Building
-                            </label>
-                            <select id="availBuildingSelect" class="form-select">
-                                <option value="">All Buildings</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-11 col-lg-10 mx-auto">
-                    <div class="card">
-                        <div class="card-body">
-                            <label class="form-label d-block text-center mb-3 time-slot-label">
-                                <span><i class="bi bi-clock"></i> Time Slot</span>
-                                <span id="timeCurrentLabel" class="time-current-inline">--:--</span>
-                            </label>
-                            <div class="time-nav">
-                                <button class="time-nav-btn" onclick="changeTimeOffset(-1)">
-                                    <i class="bi bi-chevron-left"></i> Previous Hour
-                                </button>
-                                <div class="time-display">
-                                    <div class="time-big" id="timeDisplayBig">--:--</div>
-                                    <div class="time-detail" id="timeDisplayDetail"></div>
-                                </div>
-                                <button class="time-nav-btn" onclick="changeTimeOffset(1)">
-                                    Next Hour <i class="bi bi-chevron-right"
-                                        style="margin-right:0; margin-left:4px;"></i>
-                                </button>
-                            </div>
-                            <div class="quick-offset-group" aria-label="Consecutive slot filter">
-                                <button class="quick-offset-btn active" type="button" data-stacked="1" onclick="setStackedSlotRequirement(1)">1 Slot</button>
-                                <button class="quick-offset-btn" type="button" data-stacked="2" onclick="setStackedSlotRequirement(2)">2 Slots</button>
-                                <button class="quick-offset-btn" type="button" data-stacked="3" onclick="setStackedSlotRequirement(3)">3 Slots</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="availableResults"></div>
-        </div>
+    <div class="control">
+      <span class="control-label" data-i18n="consecutive">Free for</span>
+      <div class="segmented" id="slotButtons">
+        <button type="button" data-slots="1"></button>
+        <button type="button" data-slots="2"></button>
+        <button type="button" data-slots="3"></button>
+      </div>
     </div>
 
-    <footer
-        style="text-align:center; padding:2.5rem 1rem; margin-top:2rem; border-top:1px solid var(--border-color); color:var(--text-muted); font-size:0.8rem; line-height:1.6;">
-        <p style="font-size:1rem; margin-bottom:0.5rem;">🍀 Good luck in the new semester!</p>
-        <p style="max-width:600px; margin:0 auto;">This website has no affiliation with Boğaziçi University. Please
-            check <a href="https://registration.boun.edu.tr" target="_blank" style="color:var(--light-blue);">BOUN
-                registration</a> for the most up-to-date schedule and classroom details for your classes. The
-            information presented on this page may sometimes lag behind the registration website.</p>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        const BUILDINGS = [
-            { "code": "BM", "name": "Computer Engineering Building", "prefixes": ["BM"] },
-            { "code": "BME", "name": "Institute of Biomedical Engineering", "prefixes": ["BME"], "hidden": true },
-            { "code": "EF", "name": "The Faculty of Education", "prefixes": ["EF"] },
-            { "code": "ET", "name": "ETA-B Block", "prefixes": ["ET"] },
-            { "code": "GKM", "name": "Garanti Cultural Centre", "prefixes": ["GKM"] },
-            { "code": "HH", "name": "Hamlin Hall (Former Men's Dormitory Building)", "prefixes": ["HH"] },
-            { "code": "HISAR", "name": "Hisar Campus", "prefixes": ["HA", "HB", "HC", "HD", "HE"] },
-            { "code": "İB", "name": "Washburn Hall (The Faculty of Economics and Administrative Sciences)", "prefixes": ["İB", "IB"] },
-            { "code": "JF", "name": "John Freely Hall", "prefixes": ["JF"] },
-            { "code": "KB", "name": "Science and Engineering Building", "prefixes": ["KB", "MAXWELL", "MULTI"] },
-            { "code": "KP", "name": "North Park Building", "prefixes": ["KP"] },
-            { "code": "M", "name": "Perkins Hall (The Faculty of Engineering)", "prefixes": ["M", "VYKM"] },
-            { "code": "NB", "name": "Natuk Birkan Building", "prefixes": ["NB"] },
-            { "code": "NH", "name": "New Hall", "prefixes": ["NH"] },
-            { "code": "SH", "name": "Sloane Hall (Departments of Psychology and Sociology)", "prefixes": ["SH"] },
-            { "code": "TB", "name": "Anderson Hall (Fen-Edebiyat)", "prefixes": ["TB"] },
-            { "code": "VB", "name": "Institute For Data Science And Artificial Intelligence", "prefixes": ["VB"] },
-        ];
-
-        const EXCLUDED_ROOMS = new Set(['M 3160', 'M 3160 CAD LAB']);
-        const LAB_ROOM_PATTERN = /\bLAB(?:ORATORY)?\b/i;
-
-        const JS_DAY_TO_CODE = { 1: 'M', 2: 'T', 3: 'W', 4: 'Th', 5: 'F' };
-        const DAY_STANDARDIZATION = {
-            'Monday': 'M', 'M': 'M', 'monday': 'M',
-            'Tuesday': 'T', 'T': 'T', 'tuesday': 'T',
-            'Wednesday': 'W', 'W': 'W', 'wednesday': 'W',
-            'Thursday': 'Th', 'Th': 'Th', 'thursday': 'Th',
-            'Friday': 'F', 'F': 'F', 'friday': 'F'
-        };
-
-        let selectedBuilding = null;
-        let selectedRoom = null;
-        let currentMode = 'schedule';
-        let timeOffset = 0;
-        let stackedSlotRequirement = 1;
-        let hasSearchedAvailable = false;
-        let cachedRooms = null;
-        let cachedCourses = null;
-
-        function superNormalizeRoom(room) {
-            if (!room) return "";
-            return room.replace(/\s/g, '').toUpperCase().trim();
-        }
-
-        function normalizeRoomName(room) {
-            if (!room) return null;
-            room = room.trim();
-            const m = room.match(/^([A-Za-zİıĞğÜüŞşÖöÇç]+)(\d+.*)$/);
-            return m ? `${m[1]} ${m[2]}` : room;
-        }
-
-        function isValidRoom(room) {
-            if (!room) return false;
-            return /^[A-Za-zİıĞğÜüŞşÖöÇç]+\s+[A-Za-z0-9]/.test(room.trim());
-        }
-
-        function isExcludedFromAvailable(room) {
-            if (!room) return true;
-            const trimmedRoom = room.trim();
-            if (LAB_ROOM_PATTERN.test(trimmedRoom)) return true;
-            return EXCLUDED_ROOMS.has(trimmedRoom);
-        }
-
-        function getBuildingNameForRoom(room) {
-            if (!room) return null;
-            const ru = room.replace(/\s/g, '').toUpperCase().trim();
-            if (ru.startsWith("MAXWELL") || ru.startsWith("MULTI")) return "Kare Blok";
-            for (const b of BUILDINGS) {
-                for (const p of b.prefixes) {
-                    if (ru.startsWith(p.replace(/\s/g, '').toUpperCase())) return b.name;
-                }
-            }
-            return null;
-        }
-
-        function getBuildingCodeForRoom(room) {
-            if (!room) return null;
-            const ru = room.replace(/\s/g, '').toUpperCase().trim();
-            if (ru.startsWith("MAXWELL") || ru.startsWith("MULTI")) return "KB";
-            for (const b of BUILDINGS) {
-                for (const p of b.prefixes) {
-                    if (ru.startsWith(p.replace(/\s/g, '').toUpperCase())) return b.code;
-                }
-            }
-            return null;
-        }
-
-        function smartParseSlots(s, target, cur) {
-            if (target === 0) return s.length === 0 ? cur : null;
-            if (s.length === 0) return null;
-            const r1 = smartParseSlots(s.substring(1), target - 1, [...cur, parseInt(s[0])]);
-            if (r1) return r1;
-            if (s.length >= 2) {
-                const v = parseInt(s.substring(0, 2));
-                if (v >= 10 && v <= 13) {
-                    const r2 = smartParseSlots(s.substring(2), target - 1, [...cur, v]);
-                    if (r2) return r2;
-                }
-            }
-            return null;
-        }
-
-        function parseDayString(raw) {
-            const days = [];
-            let j = 0;
-            while (j < raw.length) {
-                if (j < raw.length - 1 && raw.substring(j, j + 2) === 'Th') { days.push('Th'); j += 2; }
-                else { days.push(raw[j]); j++; }
-            }
-            return days;
-        }
-
-        function parseTimeSlots(str, count) {
-            let slots = smartParseSlots(str, count, []);
-            if (!slots) {
-                slots = [];
-                let i = 0;
-                while (i < str.length) {
-                    if (i < str.length - 1 && ['10', '11', '12', '13'].includes(str.substring(i, i + 2))) {
-                        slots.push(parseInt(str.substring(i, i + 2))); i += 2; continue;
-                    }
-                    if (/\d/.test(str[i])) slots.push(parseInt(str[i]));
-                    i++;
-                }
-            }
-            return slots;
-        }
-
-        function getFormattedRoomSchedule(roomName, semester, data) {
-            const norm = superNormalizeRoom(roomName);
-            const result = [];
-            for (const c of data.filter(x => x.semester === semester)) {
-                if (!c.slots) continue;
-                for (const s of c.slots) {
-                    if (!s.r) continue;
-                    for (let r of s.r.split('|')) {
-                        r = r.trim();
-                        if (!r || superNormalizeRoom(r) !== norm) continue;
-                        const days = parseDayString((s.d || '').trim());
-                        const slots = parseTimeSlots(String(s.t || ''), days.length);
-                        const n = Math.min(slots.length, days.length);
-                        for (let k = 0; k < n; k++) {
-                            const d = DAY_STANDARDIZATION[days[k]];
-                            if (d) result.push({ day: d, time_slot: slots[k], course_code: c.course_code });
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-
-        function buildOccupancyMap(semester, data) {
-            const occ = {};
-            for (const c of data.filter(x => x.semester === semester)) {
-                if (!c.slots) continue;
-                for (const s of c.slots) {
-                    if (!s.r) continue;
-                    for (let r of s.r.split('|')) {
-                        r = r.trim();
-                        if (!r) continue;
-                        const sn = superNormalizeRoom(r);
-                        const days = parseDayString((s.d || '').trim());
-                        const slots = parseTimeSlots(String(s.t || ''), days.length);
-                        const n = Math.min(slots.length, days.length);
-                        for (let k = 0; k < n; k++) {
-                            const d = DAY_STANDARDIZATION[days[k]];
-                            if (!d) continue;
-                            if (!occ[sn]) occ[sn] = new Set();
-                            occ[sn].add(`${d}-${slots[k]}`);
-                        }
-                    }
-                }
-            }
-            return occ;
-        }
-
-        async function loadJSON(url) {
-            const r = await fetch(url);
-            if (!r.ok) throw new Error(`Failed: ${url} (${r.status})`);
-            return r.json();
-        }
-
-        async function ensureCoursesLoaded() {
-            if (!cachedCourses) cachedCourses = await loadJSON('data/courses.json');
-            return cachedCourses;
-        }
-
-        async function ensureRoomsLoaded() {
-            if (!cachedRooms) cachedRooms = await loadJSON('data/rooms.json');
-            return cachedRooms;
-        }
-
-        function switchMode(mode) {
-            currentMode = mode;
-            document.getElementById('modeSchedule').classList.toggle('active', mode === 'schedule');
-            document.getElementById('modeAvailable').classList.toggle('active', mode === 'available');
-            document.getElementById('modeSlider').classList.toggle('right', mode === 'available');
-
-            const schedulePanel = document.getElementById('modeSchedulePanel');
-            const availablePanel = document.getElementById('modeAvailablePanel');
-
-            schedulePanel.classList.toggle('d-none', mode !== 'schedule');
-            availablePanel.classList.toggle('d-none', mode !== 'available');
-
-            const activePanel = mode === 'schedule' ? schedulePanel : availablePanel;
-            activePanel.classList.remove('panel-animate');
-            void activePanel.offsetWidth;
-            activePanel.classList.add('panel-animate');
-
-            if (mode === 'available') {
-                timeOffset = 0;
-                updateTimeDisplay();
-                findAvailableClassrooms();
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', async function () {
-            try {
-                await loadSemesters();
-                populateBuildingDropdowns();
-            } catch (e) {
-                console.error('Init error:', e);
-            }
-            attachEventListeners();
-            updateTimeDisplay();
-
-            const defaultMode = 'available';
-            currentMode = defaultMode;
-            switchMode(defaultMode);
-
-            setInterval(() => {
-                if (currentMode === 'available') {
-                    updateTimeDisplay();
-                }
-            }, 30000);
-        });
-
-        async function loadSemesters() {
-            const sel = document.getElementById('semesterSelect');
-            try {
-                const data = await loadJSON('data/semesters.json');
-                sel.innerHTML = '<option value="">Semester</option>';
-                data.forEach(s => {
-                    const o = document.createElement('option');
-                    o.value = s; o.textContent = s;
-                    sel.appendChild(o);
-                });
-                if (data.length > 0) sel.value = data[0];
-            } catch (e) {
-                sel.innerHTML = '<option value="">Failed</option>';
-                sel.disabled = true;
-                throw e;
-            }
-        }
-
-        function populateBuildingDropdowns() {
-            const fill = (id, defaultText) => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = `<option value="">${defaultText}</option>`;
-                BUILDINGS.filter(b => !b.hidden).forEach(b => {
-                    const o = document.createElement('option');
-                    o.value = b.code;
-                    o.textContent = `${b.code} \u2014 ${b.name}`;
-                    sel.appendChild(o);
-                });
-            };
-            fill('buildingSelect', 'Select a building...');
-            fill('availBuildingSelect', 'All Buildings');
-        }
-
-        async function onBuildingChange() {
-            const code = document.getElementById('buildingSelect').value;
-            const rs = document.getElementById('roomSelect');
-            rs.innerHTML = '<option value="">Select a building first</option>';
-            rs.disabled = true;
-            document.getElementById('scheduleGridContainer').classList.add('d-none');
-            selectedBuilding = null;
-            selectedRoom = null;
-            if (!code) return;
-
-            selectedBuilding = code;
-            rs.innerHTML = '<option value="">Loading...</option>';
-            try {
-                const rooms = (await ensureRoomsLoaded())[code] || [];
-                rs.innerHTML = '<option value="">Select a room...</option>';
-                if (rooms.length > 0) {
-                    rooms.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; rs.appendChild(o); });
-                    rs.disabled = false;
-                } else {
-                    rs.innerHTML = '<option value="">No rooms found</option>';
-                }
-            } catch (e) {
-                rs.innerHTML = '<option value="">Error loading</option>';
-            }
-        }
-
-        async function onRoomChange() {
-            const room = document.getElementById('roomSelect').value;
-            if (!room) { document.getElementById('scheduleGridContainer').classList.add('d-none'); return; }
-            await loadRoomSchedule(room);
-        }
-
-        async function loadRoomSchedule(room) {
-            selectedRoom = room;
-            const sem = document.getElementById('semesterSelect').value;
-            if (!sem) { alert('Please select a semester'); return; }
-
-            const gc = document.getElementById('scheduleGridContainer');
-            const gb = document.getElementById('scheduleGridBody');
-            const gh = document.getElementById('gridHeader');
-            gc.classList.remove('d-none');
-
-            const bName = getBuildingNameForRoom(room);
-            gh.innerHTML = `${room}` + (bName ? ` <span class="badge bg-info" style="font-size:0.7rem;">${bName}</span>` : '');
-            gb.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border"></div></td></tr>';
-
-            try {
-                const schedule = getFormattedRoomSchedule(room, sem, await ensureCoursesLoaded());
-                renderScheduleGrid(schedule);
-            } catch (e) {
-                gb.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color:#f87171;">Failed to load</td></tr>';
-            }
-        }
-
-        function renderScheduleGrid(schedule) {
-            const gb = document.getElementById('scheduleGridBody');
-            if (!schedule || schedule.length === 0) {
-                gb.innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">No schedule data for this room/semester</td></tr>';
-                return;
-            }
-            gb.innerHTML = '';
-            const dm = { 'Monday': 'M', 'Tuesday': 'T', 'Wednesday': 'W', 'Thursday': 'Th', 'Friday': 'F' };
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            for (let slot = 1; slot <= 13; slot++) {
-                let h = '<tr>';
-                h += `<td style="font-weight:600; color:var(--text-secondary);"><strong>${(slot + 8).toString().padStart(2, '0')}:00</strong></td>`;
-                days.forEach(d => {
-                    const m = schedule.find(i => String(i.time_slot) === String(slot) && i.day === dm[d]);
-                    h += m ? `<td class="slot-occupied">${m.course_code}</td>` : '<td></td>';
-                });
-                h += '</tr>';
-                gb.innerHTML += h;
-            }
-        }
-
-        function getCurrentSlotInfo(offset) {
-            const now = new Date();
-            const hour = now.getHours() + offset;
-            const min = now.getMinutes();
-            const jsDay = now.getDay();
-            const dayCode = JS_DAY_TO_CODE[jsDay] || null;
-            const slot = hour - 8;
-            const dayNames = { 'M': 'Monday', 'T': 'Tuesday', 'W': 'Wednesday', 'Th': 'Thursday', 'F': 'Friday' };
-            return {
-                hour, min, slot, dayCode,
-                dayName: dayCode ? dayNames[dayCode] : null,
-                isValid: dayCode !== null && slot >= 1 && slot <= 13,
-                isWeekend: jsDay === 0 || jsDay === 6,
-                displayTime: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
-            };
-        }
-
-        function updateTimeDisplay() {
-            const info = getCurrentSlotInfo(timeOffset);
-            const big = document.getElementById('timeDisplayBig');
-            const detail = document.getElementById('timeDisplayDetail');
-            const currentLabel = document.getElementById('timeCurrentLabel');
-            if (!big || !detail || !currentLabel) return;
-
-            currentLabel.textContent = info.displayTime;
-
-            if (info.isWeekend) {
-                big.textContent = 'Weekend';
-                detail.textContent = 'All classrooms are available';
-            } else if (!info.isValid) {
-                big.textContent = 'Outside class hours';
-                detail.textContent = '09:00–21:00';
-            } else {
-                const rangeStartHour = info.slot + 8;
-                const rangeEndHour = rangeStartHour + stackedSlotRequirement;
-                const slotLabel = stackedSlotRequirement === 1 ? 'slot' : 'slots';
-                const exceedsHours = info.slot + stackedSlotRequirement - 1 > 13;
-                big.textContent = `${info.dayName} · ${(rangeStartHour).toString().padStart(2, '0')}:00–${(rangeEndHour).toString().padStart(2, '0')}:00 (${stackedSlotRequirement} ${slotLabel})`;
-                detail.textContent = exceedsHours ? 'Selected range exceeds class hours' : '';
-            }
-
-            updateStackedSlotButtons();
-        }
-
-        function updateStackedSlotButtons() {
-            document.querySelectorAll('.quick-offset-btn').forEach(btn => {
-                const slots = parseInt(btn.dataset.stacked || '1', 10);
-                btn.classList.toggle('active', slots === stackedSlotRequirement);
-            });
-        }
-
-        function setStackedSlotRequirement(slots) {
-            stackedSlotRequirement = slots;
-            updateStackedSlotButtons();
-            if (currentMode === 'available') findAvailableClassrooms();
-        }
-
-        function changeTimeOffset(delta) {
-            const now = new Date();
-            const newHour = now.getHours() + timeOffset + delta;
-            if (newHour < 0 || newHour > 23) return;
-            timeOffset += delta;
-            updateTimeDisplay();
-            if (hasSearchedAvailable) findAvailableClassrooms();
-        }
-
-        async function findAvailableClassrooms() {
-            hasSearchedAvailable = true;
-            const sem = document.getElementById('semesterSelect').value;
-            if (!sem) { alert('Please select a semester'); return; }
-
-            const info = getCurrentSlotInfo(timeOffset);
-            const rd = document.getElementById('availableResults');
-
-            if (info.isWeekend) {
-                rd.innerHTML = '<div class="alert alert-info"><i class="bi bi-emoji-sunglasses"></i> It\'s the weekend — no scheduled classes, but buildings may be locked. Check access before heading over.</div>';
-                return;
-            }
-            if (!info.isValid) {
-                rd.innerHTML = '<div class="alert alert-warning"><i class="bi bi-moon-stars"></i> Outside class hours (09:00–21:00).</div>';
-                return;
-            }
-
-            if (info.slot + stackedSlotRequirement - 1 > 13) {
-                rd.innerHTML = `<div class="alert alert-warning"><i class="bi bi-clock-history"></i> ${stackedSlotRequirement}-slot search exceeds class hours from this start time. Choose an earlier time or fewer slots.</div>`;
-                return;
-            }
-
-            rd.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
-
-            try {
-                const [courses, rooms] = await Promise.all([ensureCoursesLoaded(), ensureRoomsLoaded()]);
-                const occ = buildOccupancyMap(sem, courses);
-                const bldg = document.getElementById('availBuildingSelect').value;
-                const list = bldg ? BUILDINGS.filter(b => b.code === bldg) : BUILDINGS;
-
-                let total = 0;
-                let html = '';
-
-                list.forEach(b => {
-                    const bRooms = rooms[b.code] || [];
-                    const avail = bRooms.filter(r => {
-                        if (isExcludedFromAvailable(r)) return false;
-                        const sn = superNormalizeRoom(r);
-                        const o = occ[sn];
-                        for (let i = 0; i < stackedSlotRequirement; i++) {
-                            const key = `${info.dayCode}-${info.slot + i}`;
-                            if (o && o.has(key)) return false;
-                        }
-                        return true;
-                    });
-                    if (avail.length > 0) {
-                        total += avail.length;
-                        html += `
-                            <div class="card mb-3">
-                                <div class="card-header" style="background:var(--navy-mid); color:var(--text-primary); padding:0.8rem 1.25rem;">
-                                    <h5 class="mb-0" style="font-size:0.95rem; font-weight:600;">
-                                        <i class="bi bi-building"></i> ${b.code} — ${b.name}
-                                        <span class="badge" style="background:var(--green-bg); color:var(--green-accent); border:1px solid var(--green-border);">${avail.length} available</span>
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="available-rooms-grid">
-                                        ${avail.map(r => `<span class="available-room-badge">${r}</span>`).join('')}
-                                    </div>
-                                </div>
-                            </div>`;
-                    }
-                });
-
-                if (total === 0) {
-                    html += '<div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> No available classrooms found.</div>';
-                } else {
-                    html = `<div class="alert alert-success available-summary-alert mb-3"><i class="bi bi-check-circle"></i> <strong>${total}</strong> classrooms available</div>` + html;
-                }
-
-                rd.innerHTML = html;
-            } catch (e) {
-                rd.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> Search failed</div>';
-            }
-        }
-
-        async function searchCourse() {
-            const sem = document.getElementById('semesterSelect').value;
-            const q = document.getElementById('courseSearch').value.trim();
-            const rd = document.getElementById('courseResults');
-
-            if (!sem) { alert('Please select a semester'); return; }
-            if (!q) { alert('Please enter a course code'); return; }
-
-            rd.innerHTML = '<div class="text-center py-5"><div class="spinner-border"></div></div>';
-
-            try {
-                const data = await ensureCoursesLoaded();
-                const nq = q.replace(/[\s.]/g, '').toUpperCase();
-                const matches = data.filter(c => c.semester === sem && c.course_code.replace(/[\s.]/g, '').toUpperCase().includes(nq));
-
-                if (matches.length > 0) {
-                    const display = matches.map(c => ({
-                        course_code: c.course_code,
-                        course_name: c.course_name,
-                        instructor: c.instructor,
-                        schedule_slots: c.slots || []
-                    }));
-                    displayCourseResults(display);
-                } else {
-                    rd.innerHTML = '<div class="alert alert-info"><i class="bi bi-info-circle"></i> No courses found</div>';
-                }
-            } catch (e) {
-                rd.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> Search failed</div>';
-            }
-        }
-
-        function displayCourseResults(courses) {
-            const rd = document.getElementById('courseResults');
-            let h = `<h3 class="h5 mb-3" style="color:var(--text-secondary);"><i class="bi bi-list-check"></i> Results (${courses.length})</h3>`;
-            courses.forEach(c => {
-                h += `
-                    <div class="card mb-3">
-                        <div class="card-header" style="background:var(--navy-mid); color:var(--text-primary); padding:0.8rem 1.25rem;">
-                            <h5 class="mb-0" style="font-size:0.95rem;">${c.course_code} — ${c.course_name}</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2" style="color:var(--text-secondary);"><strong>Instructor:</strong> ${c.instructor || 'N/A'}</p>
-                            ${renderCourseSchedule(c.schedule_slots)}
-                        </div>
-                    </div>`;
-            });
-            rd.innerHTML = h;
-        }
-
-        function renderCourseSchedule(slots) {
-            if (!slots || slots.length === 0) return '<p style="color:var(--text-muted);">No schedule info</p>';
-            const dayNames = { 'M': 'Mon', 'T': 'Tue', 'W': 'Wed', 'Th': 'Thu', 'F': 'Fri' };
-            const order = { 'M': 1, 'T': 2, 'W': 3, 'Th': 4, 'F': 5 };
-            const slotTypeLabels = { 'LECTURE': 'Lecture', 'LAB': 'Lab', 'PS': 'P.S.' };
-
-            const flat = [];
-            slots.forEach(s => {
-                const days = parseDayString((s.d || '').trim());
-                const timeSlots = parseTimeSlots(String(s.t || ''), days.length);
-                const rooms = (s.r || '').split('|').map(r => r.trim()).filter(r => r);
-                const sessionType = slotTypeLabels[s.y] || s.y || 'Lecture';
-                const n = Math.min(days.length, timeSlots.length);
-                for (let i = 0; i < n; i++) {
-                    const dayCode = DAY_STANDARDIZATION[days[i]];
-                    if (!dayCode) continue;
-                    const room = rooms[i] || rooms[0] || 'TBA';
-                    const building = getBuildingNameForRoom(room) || '—';
-                    flat.push({ day: dayCode, dayName: dayNames[dayCode] || dayCode, slot: timeSlots[i], time: `${(timeSlots[i] + 8).toString().padStart(2, '0')}:00`, room, building, sessionType });
-                }
-            });
-
-            flat.sort((a, b) => ((order[a.day] || 99) - (order[b.day] || 99)) || (a.slot - b.slot));
-
-            let rows = '';
-            flat.forEach(f => {
-                rows += `<tr><td><strong>${f.dayName}</strong></td><td>${f.time}</td><td>${f.sessionType}</td><td>${f.room}</td><td>${f.building}</td></tr>`;
-            });
-            return `
-                <div class="table-responsive">
-                    <table class="table table-sm table-striped mb-0">
-                        <thead><tr><th>Day</th><th>Time</th><th>Session</th><th>Room</th><th>Building</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>`;
-        }
-
-        function attachEventListeners() {
-            document.getElementById('buildingSelect').addEventListener('change', onBuildingChange);
-            document.getElementById('roomSelect').addEventListener('change', onRoomChange);
-            document.getElementById('semesterSelect').addEventListener('change', () => {
-                const rs = document.getElementById('roomSelect');
-                if (rs && rs.value) loadRoomSchedule(rs.value);
-                if (currentMode === 'available') findAvailableClassrooms();
-            });
-            document.getElementById('availBuildingSelect').addEventListener('change', () => {
-                if (currentMode === 'available') findAvailableClassrooms();
-            });
-            document.getElementById('searchBtn').addEventListener('click', searchCourse);
-            document.getElementById('courseSearch').addEventListener('keypress', e => { if (e.key === 'Enter') searchCourse(); });
-        }
-    </script>
+    <label class="checkbox control">
+      <input type="checkbox" id="showBusy">
+      <span data-i18n="showBusy">Show rooms in use</span>
+    </label>
+  </section>
+
+  <div id="availableResults"></div>
+</main>
+
+<!-- Room Schedule -->
+<main class="view app-main" id="scheduleView" hidden>
+  <aside class="sidebar">
+    <section class="panel room-panel">
+      <h2 data-i18n="findRoom">Find a room</h2>
+      <input type="text" id="roomSearch" class="text-input" autocomplete="off" data-i18n-placeholder="findRoomPlaceholder">
+      <div class="room-matches" id="roomMatches"></div>
+      <div class="select-row">
+        <div class="control">
+          <label for="buildingSelect" data-i18n="building">Building</label>
+          <select id="buildingSelect"></select>
+        </div>
+        <div class="control">
+          <label for="roomSelect" data-i18n="room">Room</label>
+          <select id="roomSelect" disabled></select>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel search-panel">
+      <h2 data-i18n="courseSearch">Find a course</h2>
+      <div class="search-bar">
+        <input type="text" id="courseSearch" class="text-input" autocomplete="off" data-i18n-placeholder="courseSearchPlaceholder">
+      </div>
+      <!-- The scroller is the wrapper, not #courseResults: app.js replaces the
+           innerHTML of #courseResults, which would destroy the scrollbar that
+           scrollview.js puts inside it. -->
+      <div class="results-scroll" data-scrollview>
+        <div class="results" id="courseResults"></div>
+      </div>
+    </section>
+  </aside>
+
+  <section class="panel schedule-panel">
+    <div class="schedule-head" id="scheduleHead"></div>
+    <div class="grid-wrap">
+      <table class="grid" id="grid"></table>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  <p class="footer-luck" data-i18n="footerLuck"></p>
+  <p data-i18n-html="footerText"></p>
+  <p class="footer-meta" id="dataUpdated"></p>
+</footer>
+
+<script src="data/manifest.js"></script>
+<script src="i18n.js"></script>
+<script src="rooms.js"></script>
+<script src="scrollview.js"></script>
+<script src="app.js"></script>
 </body>
-
 </html>
