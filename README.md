@@ -67,14 +67,17 @@ registrar's public schedule pages, with no login.
 The GitHub Actions workflow (`.github/workflows/update-courses.yml`) runs
 **daily at 03:00 UTC / 06:00 Istanbul**:
 
-- It scrapes the newest semester.
+- It scrapes the newest semester, and also the newest one already on the site,
+  so the current term keeps updating after the next one is announced.
+- A semester the registrar lists before its days and hours are filled in is
+  skipped until its timetable appears.
 - It commits only when course content actually changed. The commit message
   lists what was added, removed or rescheduled.
 - If any department fails to fetch, or the data fails its integrity checks,
   nothing is published.
 
 To run it on demand: **Actions → Update course data → Run workflow**. Leave the
-semester box blank for the newest term, or type one like `2025/2026-2`.
+semester box blank for the default (newest plus current), or type one like `2025/2026-2`.
 Running it for an older semester adds that semester to the dropdown.
 
 To scrape by hand:
